@@ -3,7 +3,7 @@ import { type Conversation } from '@grammyjs/conversations';
 import { getDataFromServer, getStaffFioAndUnit, postDataServer } from '../../services/api';
 import { sheetsApi } from '../../services/google';
 import { Members, TelegramID } from '../../type/type';
-import { addWeeks, setDay, format, addMonths, setDate } from 'date-fns';
+import { addWeeks, setDay, format, addMonths, setDate, addDays, getDay } from 'date-fns';
 
 const SPREADSHEET_ID = '1AF1mudfqU8540NiStIXMpR6y60xxwF_0ZsiZcNyKUM8';
 

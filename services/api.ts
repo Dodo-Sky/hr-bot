@@ -1,14 +1,5 @@
 import * as dotenv from 'dotenv';
 import { StaffFioAndUnitAndHiredOn } from '../type/type';
-dotenv.config();
-
-const getEnv = (name: string): string => {
-  if (!process.env[name]) {
-    throw new Error('Не найдена переменная окружения ' + name);
-  }
-  return process.env[name];
-};
-const URL = getEnv('API_BASE_URL');
 
 export const getDataFromServer = async (variable: string) => {
   const url = `${URL}globalGetServer?payload=${variable}`;

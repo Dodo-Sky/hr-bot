@@ -6,6 +6,7 @@ export async function setMyCommands(bot: any) {
       { command: 'message_help', description: 'Описание программы отправки сообщений курьерам' },
       { command: 'friend', description: 'Программа приведи друга' },
       { command: 'discipline', description: 'Программа соблюдение дисциплины' },
+      { command: 'disci', description: 'Программа соблюдение дис' },
     ],
     {
       scope: {

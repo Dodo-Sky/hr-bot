@@ -10,21 +10,14 @@ import { calculateBonus } from './conversation/yearBonus/calculateBonus';
 import * as middleware from './middleware/middleware';
 import { setMyCommands } from './commands/commands';
 import { friend, discipline, start, message_help } from './commands/handlers';
-import * as dotenv from 'dotenv';
-dotenv.config();
+
 import { autoRetry } from '@grammyjs/auto-retry';
 import { FileAdapter } from '@grammyjs/storage-file';
 import { message_kitchen } from "./conversation/message/message_kitchen";
 import { message_courier } from "./conversation/message/message_courier";
+import { BOT_TOKEN } from './config';
 
-const getEnv = (name: string): string => {
-  if (!process.env[name]) {
-    throw new Error('Не найдена переменная окружения ' + name);
-  }
-  return process.env[name];
-};
-
-const bot = new Bot<ConversationFlavor<Context>>(getEnv('BOT_TOKEN'));
+const bot = new Bot<ConversationFlavor<Context>>(BOT_TOKEN);
 bot.api.config.use(
   autoRetry({
     rethrowInternalServerErrors: true, // не обрабатывать внутренние ошибки сервера

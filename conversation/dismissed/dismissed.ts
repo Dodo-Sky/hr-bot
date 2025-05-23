@@ -121,7 +121,7 @@ ${staff.firstName}, добрый день/вечер! 👋
           otherwise: async (ctx) => await ctx.reply('Дата введена в неверном формате'),
         });
       await conversation.external(() => {
-        const parsed = parse(dateComback.msg.text, 'yyyy-MM-dd', new Date());
+        const parsed = parse(dateComback.msg.text!, 'yyyy-MM-dd', new Date());
         const formatted = format(parsed, 'yyyy-MM-dd');
         staff.dateBack = formatted;
         postDataServer('dismissedBot', staff);

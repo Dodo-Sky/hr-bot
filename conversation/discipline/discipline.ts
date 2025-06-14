@@ -5,8 +5,13 @@ import { Schedule } from '../../type/type';
 import { logger } from '../../logger';
 
 async function getScheduleFromServer(scheduleId: string): Promise<Schedule> {
-  const dataFromServer = await getDataFromServer('discipline');
-  const schedule: Schedule = dataFromServer.find((el: { scheduleId: string }) => el.scheduleId === scheduleId);
+  const data = []
+  const departmentNames = ['Тюмень', 'Курган']
+  for (const department of departmentNames) {
+    const dataFromServer = await getDataFromServer(`${department}/discipline`);
+    data.push(...dataFromServer);
+  }
+  const schedule: Schedule = data.find((el: { scheduleId: string }) => el.scheduleId === scheduleId);
   return schedule;
 }
 

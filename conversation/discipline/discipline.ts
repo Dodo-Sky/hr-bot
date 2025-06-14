@@ -9,6 +9,7 @@ async function getScheduleFromServer(scheduleId: string): Promise<Schedule> {
   const departmentNames = ['Тюмень', 'Курган']
   for (const department of departmentNames) {
     const dataFromServer = await getDataFromServer(`${department}/discipline`);
+    logger.info({ department, dataFromServer }, 'Fetched discipline data from server');
     data.push(...dataFromServer);
   }
   const schedule: Schedule = data.find((el: { scheduleId: string }) => el.scheduleId === scheduleId);

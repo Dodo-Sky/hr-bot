@@ -5,7 +5,7 @@ import { logger } from '../logger';
 export async function disciplineCallBack(ctx: ConversationFlavor<Context>, next: NextFunction) {
   await ctx.answerCallbackQuery();
   const [prefix, scheduleId] = await ctx.callbackQuery?.data!.split(':')!;
-  logger.info('Discipline callback triggered with prefix:', prefix, 'and scheduleId:', scheduleId);
+  logger.info({ prefix, scheduleId }, 'Discipline callback received');
 
   if (prefix === 'responceArr') {
     await ctx.conversation.enter('responceArr');

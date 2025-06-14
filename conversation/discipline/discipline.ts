@@ -11,9 +11,13 @@ async function getScheduleFromServer(scheduleId: string): Promise<Schedule> {
 }
 
 export async function responceArr(conversation: Conversation, ctx: Context) {
-  logger.info(ctx, 'Entering discipline responceArr conversation');
   const [prefix, scheduleId] = ctx.callbackQuery?.data!.split(':')!;
+  
+  const childLogger = logger.child({ prefix, scheduleId });
+  
   const schedule: Schedule = await conversation.external(() => getScheduleFromServer(scheduleId));
+  childLogger.info({ schedule }, 'Fetched schedule from server');
+  
   let question = await ctx.reply(`Ответ по нарушению дисциплины за ${schedule.scheduledShiftStartAtLocal}`, {
     reply_markup: { force_reply: true },
   }); 

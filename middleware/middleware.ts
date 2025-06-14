@@ -4,19 +4,19 @@ import { logger } from '../logger';
 
 export async function disciplineCallBack(ctx: ConversationFlavor<Context>, next: NextFunction) {
   await ctx.answerCallbackQuery();
-  const [prefix, scheduleId] = await ctx.callbackQuery?.data!.split(':')!;
+  const [prefix, scheduleId] = ctx.callbackQuery?.data!.split(':')!;
   logger.info({ prefix, scheduleId }, 'Discipline callback received');
 
   if (prefix === 'responceArr') {
     await ctx.conversation.enter('responceArr');
-    logger.info('Entering responceArr conversation');
+    logger.info({}, 'Entering responceArr conversation');
   }
   else if (prefix === 'decision') {
     await ctx.conversation.enter('decision');
-    logger.info('Entering decision conversation');
+    logger.info({}, 'Entering decision conversation');
   }
   else {
-    logger.warn('Unknown prefix in discipline callback:', prefix);
+    logger.warn({ prefix }, 'Unknown prefix in discipline callback');
   }
   await next();
 }

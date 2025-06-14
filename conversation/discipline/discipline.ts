@@ -2,6 +2,7 @@ import { type Context } from 'grammy';
 import { type Conversation } from '@grammyjs/conversations';
 import { getDataFromServer, postDataServer } from '../../services/api';
 import { Schedule } from '../../type/type';
+import { logger } from '../../logger';
 
 async function getScheduleFromServer(scheduleId: string): Promise<Schedule> {
   const dataFromServer = await getDataFromServer('discipline');
@@ -10,12 +11,12 @@ async function getScheduleFromServer(scheduleId: string): Promise<Schedule> {
 }
 
 export async function responceArr(conversation: Conversation, ctx: Context) {
-  console.log(ctx);
-  const [prefix, scheduleId] = await ctx.callbackQuery?.data!.split(':')!;
+  logger.info(ctx, 'Entering discipline responceArr conversation');
+  const [prefix, scheduleId] = ctx.callbackQuery?.data!.split(':')!;
   const schedule: Schedule = await conversation.external(() => getScheduleFromServer(scheduleId));
   let question = await ctx.reply(`Ответ по нарушению дисциплины за ${schedule.scheduledShiftStartAtLocal}`, {
     reply_markup: { force_reply: true },
-  });
+  }); 
   const ctx1 = await conversation
     .waitForReplyTo(question.message_id, {
       otherwise: (ctx) =>

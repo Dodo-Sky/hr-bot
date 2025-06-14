@@ -8,12 +8,12 @@ export async function disciplineCallBack(ctx: ConversationFlavor<Context>, next:
   logger.info({ prefix, scheduleId }, 'Discipline callback received');
 
   if (prefix === 'responceArr') {
-    await ctx.conversation.enter('responceArr');
     logger.info({}, 'Entering responceArr conversation');
+    await ctx.conversation.enter('responceArr');
   }
   else if (prefix === 'decision') {
-    await ctx.conversation.enter('decision');
     logger.info({}, 'Entering decision conversation');
+    await ctx.conversation.enter('decision');
   }
   else {
     logger.warn({ prefix }, 'Unknown prefix in discipline callback');

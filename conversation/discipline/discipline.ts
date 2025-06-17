@@ -7,10 +7,10 @@ import { logger } from '../../logger';
 async function getScheduleFromServer(scheduleId: string): Promise<Schedule | undefined> {
   const data = []
   const departmentNames = ['Тюмень', 'Курган']
-  for (const department of departmentNames) {
-    const dataFromServer = await getDataFromServer(`${department}/discipline`);
-    logger.info({ department, dataFromServer }, 'Fetched discipline data from server');
-    data.push(...dataFromServer);
+  for (const departmentName of departmentNames) {
+    const dataFromServer = await getDataFromServer(`${departmentName}/discipline`);
+    logger.info({ departmentName, dataFromServer }, 'Fetched discipline data from server');
+    data.push(...dataFromServer.map(schedule => ({...schedule, departmentName})));
   }
   return data.find((el: { scheduleId: string }) => el.scheduleId === scheduleId);
 }

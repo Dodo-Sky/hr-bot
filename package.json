@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "bot.js",
   "scripts": {
-    "start": "nodemon --ignore dialogs-data/ bot.js"
+    "start": "nodemon --ignore dialogs-data/ bot.js",
+    "build": "rm -rf dist && tsc"
   },
   "author": "",
   "license": "ISC",

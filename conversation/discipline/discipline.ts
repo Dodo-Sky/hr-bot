@@ -30,7 +30,7 @@ async function getDisciplineFromApiServer(disciplineId: string): Promise<Discipl
   }
 }
 
-export async function staffCommentHandler(conversation: Conversation, ctx: Context) {
+export async function responceArr(conversation: Conversation, ctx: Context) {
   const [prefix, disciplineId] = ctx.callbackQuery?.data!.split(':')!;
 
   const childLogger = logger.child({ prefix, disciplineId });
@@ -70,7 +70,7 @@ export async function staffCommentHandler(conversation: Conversation, ctx: Conte
   }
 }
 
-export async function managerDecisionHandler(conversation: Conversation, ctx: Context) {
+export async function decision(conversation: Conversation, ctx: Context) {
   const [prefix, disciplineId] = await ctx.callbackQuery?.data!.split(':')!;
   const discipline = await conversation.external(() => getDisciplineFromApiServer(disciplineId));
 

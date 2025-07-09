@@ -1,55 +1,48 @@
 import { type Context } from 'grammy';
 import { type Conversation } from '@grammyjs/conversations';
-import { getDataFromServer, postDataServer } from '../../services/api';
-import { Schedule } from '../../type/type';
+import { postDataServer } from '../../services/api';
 import { logger } from '../../logger';
+import { format, parseISO } from 'date-fns';
 
-async function getScheduleFromServer(scheduleId: string): Promise<Schedule | undefined> {
-  const data = []
-  const departmentNames = ['Тюмень', 'Курган']
-  for (const departmentName of departmentNames) {
-    const dataFromServer = await getDataFromServer(`${departmentName}/discipline`);
-    logger.info({ departmentName, dataFromServer }, 'Fetched discipline data from server');
-    data.push(...dataFromServer.map(schedule => ({...schedule, departmentName})));
-  }
-  return data.find((el: { scheduleId: string }) => el.scheduleId === scheduleId);
+interface Discipline {
+  id: string;
+  schedule_id: string;
+  scheduled_shift_start_at_local: string;
+  scheduled_shift_end_at_local: string;
+  comment_staff: string | null;
+  manager_decision: string | null;
+  unit_director_control: string | null;
 }
 
-export async function responceArr(conversation: Conversation, ctx: Context) {
-  const [prefix, scheduleId] = ctx.callbackQuery?.data!.split(':')!;
-
-  const childLogger = logger.child({ prefix, scheduleId });
-
-  const schedule = await conversation.external(() => getScheduleFromServer(scheduleId));
-  if (!schedule) {
-    childLogger.error({ scheduleId }, 'Schedule not found');
-    return ctx.reply('Расписание не найдено. Пожалуйста, попробуйте позже.');
+async function getDisciplineFromApiServer(disciplineId: string): Promise<Discipline | null> {
+  const url = `${URL}/discipline/${disciplineId}`;
+  try {
+    const response = await fetch(url);
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (JSON.parse(error.message).error === 'not_found') {
+        return null;
+      }
+      throw error;
+    }
+    throw new Error('Произошла ошибка при получении данных с сервера');
   }
-  childLogger.info({ schedule }, 'Fetched schedule from server');
-
-  let question = await ctx.reply(`Ответ по нарушению дисциплины за ${schedule.scheduledShiftStartAtLocal}`, {
-    reply_markup: { force_reply: true },
-  });
-  const ctx1 = await conversation
-    .waitForReplyTo(question.message_id, {
-      otherwise: (ctx) =>
-        ctx.reply('ОШИБКА! Ответьте на этот вопрос для продолжения работы', {
-          reply_parameters: { message_id: question.message_id },
-        }),
-    })
-    .andFor(':text', { otherwise: (ctx) => ctx.reply('Ответ принимается только текстом') });
-  schedule.commentStaff = ctx1.msg.text;
-  postDataServer('discipline', schedule);
-  await ctx.reply(`Спасибо, Ваш ответ  <b>принят</b>`, {
-    parse_mode: 'HTML',
-    reply_parameters: { message_id: question.message_id, quote: question.text },
-  });
 }
 
-export async function decision(conversation: Conversation, ctx: Context) {
-  const [prefix, scheduleId] = await ctx.callbackQuery?.data!.split(':')!;
-  const schedule: Schedule = await conversation.external(() => getScheduleFromServer(scheduleId));
-  let question = await ctx.reply(`Ответ по нарушению дисциплины за ${schedule.scheduledShiftStartAtLocal}`, {
+export async function staffCommentHandler(conversation: Conversation, ctx: Context) {
+  const [prefix, disciplineId] = ctx.callbackQuery?.data!.split(':')!;
+
+  const childLogger = logger.child({ prefix, disciplineId });
+
+  const discipline = await conversation.external(() => getDisciplineFromApiServer(disciplineId));
+  if (discipline === null) {
+    return ctx.reply('Запись о нарушении дисциплины найдена. Пожалуйста, попробуйте позже.');
+  }
+  childLogger.info({ discipline }, 'Fetched discipline from server');
+  const scheduledShiftStartAtLocal = parseISO(discipline.scheduled_shift_start_at_local);
+  const formattedStartAtLocal = format(scheduledShiftStartAtLocal, 'dd.MM.yyyy HH:mm');
+  let question = await ctx.reply(`Ответ по нарушению дисциплины за ${formattedStartAtLocal}`, {
     reply_markup: { force_reply: true },
   });
 
@@ -61,10 +54,57 @@ export async function decision(conversation: Conversation, ctx: Context) {
         }),
     })
     .andFor(':text', { otherwise: (ctx) => ctx.reply('Ответ принимается только текстом') });
-  schedule.managerDecision = ctx1.msg.text;
-  postDataServer('discipline', schedule);
-  await ctx.reply(`Спасибо, Ваш ответ  <b>принят</b>`, {
-    parse_mode: 'HTML',
-    reply_parameters: { message_id: question.message_id, quote: question.text },
+
+  const requestData = {
+    id: discipline.id,
+    commentStaff: ctx1.msg.text,
+  };
+  try {
+    await postDataServer('discipline', requestData);
+    await ctx.reply(`Спасибо, Ваш ответ  <b>принят</b>`, {
+      parse_mode: 'HTML',
+      reply_parameters: { message_id: question.message_id, quote: question.text },
+    });
+  } catch (error: unknown) {
+    await ctx.reply('Не удалось записать ответ на сервер. Пожалуйста, попробуйте позже.');
+  }
+}
+
+export async function managerDecisionHandler(conversation: Conversation, ctx: Context) {
+  const [prefix, disciplineId] = await ctx.callbackQuery?.data!.split(':')!;
+  const discipline = await conversation.external(() => getDisciplineFromApiServer(disciplineId));
+
+  if (discipline === null) {
+    return ctx.reply('Запись о нарушении дисциплины найдена. Пожалуйста, попробуйте позже.');
+  }
+
+  const scheduledShiftStartAtLocal = parseISO(discipline.scheduled_shift_start_at_local);
+  const formattedStartAtLocal = format(scheduledShiftStartAtLocal, 'dd.MM.yyyy HH:mm');
+
+  let question = await ctx.reply(`Ответ по нарушению дисциплины за ${formattedStartAtLocal}`, {
+    reply_markup: { force_reply: true },
   });
+
+  const ctx1 = await conversation
+    .waitForReplyTo(question.message_id, {
+      otherwise: (ctx) =>
+        ctx.reply('ОШИБКА! Ответьте на этот вопрос для продолжения работы', {
+          reply_parameters: { message_id: question.message_id },
+        }),
+    })
+    .andFor(':text', { otherwise: (ctx) => ctx.reply('Ответ принимается только текстом') });
+
+  const requestData = {
+    managerDecision: ctx1.msg.text,
+    unitDirectorControl: discipline.unit_director_control,
+  }
+  try {
+    await postDataServer('discipline', requestData);
+    await ctx.reply(`Спасибо, Ваш ответ  <b>принят</b>`, {
+      parse_mode: 'HTML',
+      reply_parameters: { message_id: question.message_id, quote: question.text },
+    });
+  } catch (error: unknown) {
+    await ctx.reply('Не удалось записать ответ на сервер. Пожалуйста, попробуйте позже.');
+  }
 }

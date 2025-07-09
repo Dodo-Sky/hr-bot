@@ -40,8 +40,8 @@ bot.use(
 const oneHourInMilliseconds = 30 * 60 * 1000;
 // установка диалогов в настройки бота
 // программа discipline
-bot.use(createConversation(disciplineProgramm.responceArr, { maxMillisecondsToWait: oneHourInMilliseconds }));
-bot.use(createConversation(disciplineProgramm.decision, { maxMillisecondsToWait: oneHourInMilliseconds }));
+bot.use(createConversation(disciplineProgramm.staffCommentHandler, { maxMillisecondsToWait: oneHourInMilliseconds }));
+bot.use(createConversation(disciplineProgramm.managerDecisionHandler, { maxMillisecondsToWait: oneHourInMilliseconds }));
 
 // программа yearBonus
 bot.use(createConversation(yearBonus.cancelYearBonus, { maxMillisecondsToWait: oneHourInMilliseconds }));

@@ -99,4 +99,4 @@ bot.catch((err) => {
 });
 
 bot.start();
-console.log('Бот запущщен');
+console.log('Бот запущен');

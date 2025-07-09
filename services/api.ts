@@ -8,7 +8,7 @@ const getEnv = (name: string): string => {
   }
   return process.env[name];
 };
-const URL = getEnv('API_BASE_URL');
+export const URL = getEnv('API_BASE_URL');
 
 export const getDataFromServer = async (variable: string) => {
   const url = `${URL}globalGetServer?payload=${variable}`;

@@ -3,6 +3,7 @@ import { type Conversation } from '@grammyjs/conversations';
 import { postDataServer } from '../../services/api';
 import { logger } from '../../logger';
 import { format, parseISO } from 'date-fns';
+import { URL } from '../../services/api';
 
 interface Discipline {
   id: string;
@@ -15,7 +16,7 @@ interface Discipline {
 }
 
 async function getDisciplineFromApiServer(disciplineId: string): Promise<Discipline | null> {
-  const url = `${URL}/discipline/${disciplineId}`;
+  const url = `${URL}discipline/${disciplineId}`;
   try {
     const response = await fetch(url);
     return await response.json();
@@ -97,7 +98,7 @@ export async function decision(conversation: Conversation, ctx: Context) {
   const requestData = {
     managerDecision: ctx1.msg.text,
     unitDirectorControl: discipline.unit_director_control,
-  }
+  };
   try {
     await postDataServer('discipline', requestData);
     await ctx.reply(`Спасибо, Ваш ответ  <b>принят</b>`, {

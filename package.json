@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "bot.js",
   "scripts": {
-    "start": "nodemon --ignore dialogs-data/ bot.js"
+    "start": "nodemon --ignore dialogs-data/ bot.js",
+    "build": "rm -rf dist && tsc"
   },
   "author": "",
   "license": "ISC",
@@ -19,8 +20,12 @@
     "eslint-plugin-prettier": "^5.2.5",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^4.6.2",
+<<<<<<< HEAD
     "eslint-plugin-vue": "^10.3.0",
     "globals": "^16.3.0",
+=======
+    "pino-pretty": "^13.0.0",
+>>>>>>> 2db877f87249f1c5b22af2f925786834b3896080
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.35.1"
@@ -34,6 +39,7 @@
     "dotenv": "^16.4.7",
     "googleapis": "^148.0.0",
     "grammy": "^1.35.1",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "pino": "^9.7.0"
   }
 }

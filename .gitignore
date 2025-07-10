@@ -140,4 +140,5 @@ credentials.json
 **/*.js
 
 dialogs-data/
-node_modules/
+
+.idea/

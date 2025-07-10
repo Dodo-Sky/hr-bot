@@ -1,24 +1,3 @@
-export type Schedule = {
-  fio: string;
-  scheduleId: string;
-  staffId: string;
-  inn: string;
-  unitName: string;
-  staffTypeName: string;
-  scheduledShiftStartAtLocal: string;
-  scheduledShiftEndAtLocal: string;
-  commentStaff: string;
-  typeViolation: string;
-  managerDecision: string;
-  unitDirectorControl: string;
-  idTelegram: number;
-  message: boolean;
-  description: string;
-  shiftId: string;
-  clockInAtLocal: string;
-  clockOutAtLocal: string;
-};
-
 export type Staff = {
   id: string;
   firstName: string;

@@ -1,14 +1,22 @@
 import { Context, NextFunction } from 'grammy';
 import { type ConversationFlavor } from '@grammyjs/conversations';
+import { logger } from '../logger';
 
 export async function disciplineCallBack(ctx: ConversationFlavor<Context>, next: NextFunction) {
   await ctx.answerCallbackQuery();
-  const [prefix, scheduleId] = await ctx.callbackQuery?.data!.split(':')!;
+  const [prefix, scheduleId] = ctx.callbackQuery?.data!.split(':')!;
+  logger.info({ prefix, scheduleId }, 'Discipline callback received');
+
   if (prefix === 'responceArr') {
+    logger.info({}, 'Entering responceArr conversation');
     await ctx.conversation.enter('responceArr');
   }
-  if (prefix === 'decision') {
+  else if (prefix === 'decision') {
+    logger.info({}, 'Entering decision conversation');
     await ctx.conversation.enter('decision');
+  }
+  else {
+    logger.warn({ prefix }, 'Unknown prefix in discipline callback');
   }
   await next();
 }

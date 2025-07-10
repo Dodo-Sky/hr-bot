@@ -96,6 +96,7 @@ export async function decision(conversation: Conversation, ctx: Context) {
     .andFor(':text', { otherwise: (ctx) => ctx.reply('Ответ принимается только текстом') });
 
   const requestData = {
+    id: discipline.id,
     managerDecision: ctx1.msg.text,
     unitDirectorControl: discipline.unit_director_control,
   };

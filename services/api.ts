@@ -1,7 +1,6 @@
 import * as dotenv from 'dotenv';
 import { StaffFioAndUnitAndHiredOn } from '../type/type';
-<<<<<<< HEAD
-=======
+
 dotenv.config();
 
 const getEnv = (name: string): string => {
@@ -11,7 +10,6 @@ const getEnv = (name: string): string => {
   return process.env[name];
 };
 export const URL = getEnv('API_BASE_URL');
->>>>>>> 2db877f87249f1c5b22af2f925786834b3896080
 
 export const getDataFromServer = async (variable: string) => {
   const url = `${URL}globalGetServer?payload=${variable}`;

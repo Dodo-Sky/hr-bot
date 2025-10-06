@@ -121,12 +121,14 @@ where telegram_id = $1
           }),
       });
 
+      //chatId = ['1185183311'];
+
       //Рассылка
       await ctx.reply(`Делаю рассылку, ждите отчета`);
 
       for (const id of chatId) {
         try {
-          await ctx.api.sendMessage(id, messageToStaff.msg.text!);
+          await ctx.api.sendMessage(id, `сообщение от ${nameFunction} \n ${messageToStaff.msg.text!}`);
           const staff = staffData.find((el) => el.idTelegramm == id);
           message_ok.push(`${staff?.lastName} ${staff?.firstName}`);
         } catch (err) {
@@ -137,22 +139,32 @@ where telegram_id = $1
           await sleep(500);
         }
       }
-      await ctx.reply(
-        `Отправлено сообщение сотрудникам 
-${message_ok
-  .sort((a, b) => a.localeCompare(b))
-  .map((el, i) => `${i + 1}. ${el}`)
-  .join('\n')}`,
-      );
-      await ctx.reply(
-        `ОШИБКА в отправке сотрудникам 
-${message_err
-  .sort((a, b) => a.localeCompare(b))
-  .map((el, i) => `${i + 1}. ${el}`)
-  .join('\n')}`,
-      );
-      return;
+
+      if (message_ok.length === 0) {
+        await ctx.reply(`Никому не отправлено сообщение`);
+      } else {
+        await ctx.reply(
+          `Отправлено сообщение следующим сотрудникам 
+  ${message_ok
+    .sort((a, b) => a.localeCompare(b))
+    .map((el, i) => `${i + 1}. ${el}`)
+    .join('\n')}`,
+        );
+      }
+
+      if (message_err.length === 0) {
+        await ctx.reply(`Нет ошибок в отправке`);
+      } else {
+        await ctx.reply(
+          `ОШИБКА в отправке сообщения
+  ${message_err
+    .sort((a, b) => a.localeCompare(b))
+    .map((el, i) => `${i + 1}. ${el}`)
+    .join('\n')}`,
+        );
+      }
     }
+    return;
 
     // сообщение от управляющего (только своя пиццерия)
   } else if (nameFunction === 'Управляющий') {
@@ -176,7 +188,7 @@ ${message_err
 
     for (const id of chatId) {
       try {
-        await ctx.api.sendMessage(id, messageToStaff.msg.text!);
+        await ctx.api.sendMessage(id, `сообщение от ${nameFunction} \n ${messageToStaff.msg.text!}`);
         const staff = staffData.find((el) => el.idTelegramm == id);
         message_ok.push(`${staff?.lastName} ${staff?.firstName}`);
       } catch (err) {
@@ -187,20 +199,29 @@ ${message_err
         await sleep(500);
       }
     }
-    await ctx.reply(
-      `Отправлено сообщение сотрудникам 
+    if (message_ok.length === 0) {
+      await ctx.reply(`Никому не отправлено сообщение`);
+    } else {
+      await ctx.reply(
+        `Отправлено сообщение следующим сотрудникам 
 ${message_ok
   .sort((a, b) => a.localeCompare(b))
   .map((el, i) => `${i + 1}. ${el}`)
   .join('\n')}`,
-    );
-    await ctx.reply(
-      `ОШИБКА в отправке сотрудникам 
+      );
+    }
+
+    if (message_err.length === 0) {
+      await ctx.reply(`Нет ошибок в отправке`);
+    } else {
+      await ctx.reply(
+        `ОШИБКА в отправке сообщения
 ${message_err
   .sort((a, b) => a.localeCompare(b))
   .map((el, i) => `${i + 1}. ${el}`)
   .join('\n')}`,
-    );
+      );
+    }
     return;
 
     // Прочее

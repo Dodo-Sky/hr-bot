@@ -8,7 +8,10 @@ export type Staff = {
   inn: string;
   unitId: string;
   unitName: string;
+  positionId: string;
   positionName: string;
+  employmentTypeId: string;
+  employmentTypeName:  string;
   status: string;
   hiredOn: string;
   dismissedOn: string;
@@ -25,6 +28,10 @@ export type Staff = {
   dateBack: string;
   furtherCall: string;
   contact: any[];
+  count_shifts: number;
+  idTelegramm: string;
+  taxpayerIdentificationNumber: string;
+  staffType: string;
 };
 
 export type ContactStaff = {
@@ -108,7 +115,7 @@ export interface StaffData {
   dismissedOn: string;
   status: string;
   lastModifiedAt: string;
-  idTelegramm: string | number;
+  idTelegramm: string;
 }
 
 export interface UnitsSettings {
@@ -140,3 +147,4 @@ interface IdTelegramm {
   nameFunction: string;
   fio: string;
 }
+

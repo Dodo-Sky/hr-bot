@@ -1,54 +1,70 @@
 import { type Context, InlineKeyboard } from 'grammy';
 import { type Conversation } from '@grammyjs/conversations';
-import { getDataFromServer } from '../../services/api';
-import { StaffData, UnitsSettings } from '../../type/type';
+import { postDataServer } from '../../services/api';
+import { Staff } from '../../type/type';
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function message_kitchen(conversation: Conversation, ctx: Context) {
-  const staffData: StaffData[] = await conversation.external(async () => await getDataFromServer('staffData'));
-
-  const unitsSettings: UnitsSettings[] = await conversation.external(
-    async () => await getDataFromServer('unitsSettings'),
+  let params = [ctx.chatId];
+  let query = `
+  select 
+u."name" as "unitName",
+t."name" as "nameFunction",
+tg.department_id
+from public.telegram_id tg
+join public.task_staff t on t.id = tg.task_staff_id
+join units u on u.id = tg.unit_id
+where telegram_id = $1
+  `;
+  const [{ unitName, nameFunction, department_id }] = await conversation.external(
+    async () => await postDataServer('posgreSQL', { query, params }),
   );
 
-  function getNameFunctionAndUnitName() {
-    let nameFunction: string | undefined;
-    let unitName: string | undefined;
-    unitsSettings.forEach((unit) => {
-      if (unit.idTelegramm) {
-        for (const el of unit.idTelegramm) {
-          if (el.id === ctx.chatId) {
-            // 1782943981  2048110941 ctx.chatId
-            nameFunction = el.nameFunction;
-            unitName = unit.unitName;
-          }
-        }
-      }
-    });
-    return [nameFunction, unitName];
-  }
-  const [nameFunction, unitName] = await conversation.external(() => getNameFunctionAndUnitName());
+  params = [department_id];
+  query = `select 
+  "firstName",
+  "lastName",
+  "unitName",
+  status,
+  "idTelegramm"
+	from public.staff s
+	join public.units u on u.id = s."unitId"
+	join public.departments d on d.id = u.department_id
+	where 1=1 
+		and department_id = $1
+		and "staffType" != 'Courier'
+		and "idTelegramm" is not null`;
+  const staffData: Staff[] = await conversation.external(
+    async () => await postDataServer('posgreSQL', { query, params }),
+  );
+  const nameFunction_ok = [
+    'HR директор',
+    'HR менеджер',
+    'Руководитель отдела обучения и контроллинга',
+    'Франчайзи',
+    'Территориальный управляющий',
+  ];
 
-  // сообщение от HR службы (все пиццерии)
-  if (
-    nameFunction === 'HR директор' ||
-    nameFunction === 'HR менеджер' ||
-    nameFunction === 'Руководитель отдела обучения и контроллинга'
-  ) {
-    const nameUnits = unitsSettings.map((el) => [el.unitName, el.unitName]);
-    nameUnits.unshift(['Все', 'Все']);
-    nameUnits.push(['Отмена', 'Отмена']);
+  let listNotofication: Staff[];
+  let chatId: string[];
+  const message_ok: string[] = [];
+  const message_err: string[] = [];
 
-    let buttonRow: any = nameUnits.map(([label, name]) => [InlineKeyboard.text(label, name)]);
+  if (nameFunction_ok.includes(nameFunction)) {
+    const nameUnits = Array.from(new Set(staffData.map((el) => el.unitName)));
+    nameUnits.unshift('Все');
+    nameUnits.push('Отмена');
+
+    let buttonRow: any = nameUnits.map((el) => [InlineKeyboard.text(el, el)]);
     const keyboard = InlineKeyboard.from(buttonRow);
     let changeUnit = await ctx.reply('Кому отправить сообщение?', {
       reply_markup: keyboard,
     });
 
-    let callback = nameUnits.map((el) => el[1]);
+    let callback = nameUnits.map((el) => el);
     const responce = await conversation.waitForCallbackQuery(callback, {
       otherwise: async (ctx) => {
         await ctx.reply(`ОШИБКА!! Выберетие пицерию для отправки сообщения или нажмите Отмена`, {
@@ -57,19 +73,13 @@ export async function message_kitchen(conversation: Conversation, ctx: Context) 
       },
     });
 
-    // Рассылка
-    let listNotofication: StaffData[];
-    let chatId: any;
-
     if (responce.callbackQuery.data === 'Все') {
-      listNotofication = staffData.filter((el: StaffData) => el.idTelegramm && el.staffType !== 'Courier');
+      listNotofication = staffData;
     } else if (responce.callbackQuery.data === 'Отмена') {
       await ctx.reply('Вы отменили отправку сообщения');
       return;
     } else {
-      listNotofication = staffData.filter(
-        (el: StaffData) => el.idTelegramm && el.staffType !== 'Courier' && el.unitName === responce.callbackQuery.data,
-      );
+      listNotofication = staffData.filter((el: Staff) => el.unitName === responce.callbackQuery.data);
     }
 
     let question = await ctx.reply('Выберите категорию сотрудников', {
@@ -85,7 +95,7 @@ export async function message_kitchen(conversation: Conversation, ctx: Context) 
 
     const statusStaff = await conversation.waitForCallbackQuery(['Active', 'Suspended', 'Dismissed', 'Отмена'], {
       otherwise: async (ctx) => {
-        await ctx.reply(`ОШИБКА!! категорию или нажмите Отмена`, {
+        await ctx.reply(`ОШИБКА!! Выберите категорию или нажмите Отмена`, {
           reply_parameters: { message_id: question.message_id },
         });
       },
@@ -111,19 +121,37 @@ export async function message_kitchen(conversation: Conversation, ctx: Context) 
           }),
       });
 
+      //Рассылка
+      await ctx.reply(`Делаю рассылку, ждите отчета`);
+
       for (const id of chatId) {
         try {
           await ctx.api.sendMessage(id, messageToStaff.msg.text!);
+          const staff = staffData.find((el) => el.idTelegramm == id);
+          message_ok.push(`${staff?.lastName} ${staff?.firstName}`);
         } catch (err) {
-          let staff = staffData.find((el) => el.idTelegramm === id);
-          let fio = `${staff?.firstName} ${staff?.lastName}`;
-          await ctx.reply(`Не удалось отправить сообщение ${fio}`);
-          console.log(err + 'Ошибка в прогорамме отправка сообщений');
+          const staff = staffData.find((el) => el.idTelegramm === id);
+          message_err.push(`${staff?.lastName} ${staff?.firstName}`);
+          console.log(err + 'Ошибка в программе отправка сообщений');
         } finally {
           await sleep(500);
         }
       }
-      await ctx.reply(`Отправлено ${chatId.length} сотрудникам`);
+      await ctx.reply(
+        `Отправлено сообщение сотрудникам 
+${message_ok
+  .sort((a, b) => a.localeCompare(b))
+  .map((el, i) => `${i + 1}. ${el}`)
+  .join('\n')}`,
+      );
+      await ctx.reply(
+        `ОШИБКА в отправке сотрудникам 
+${message_err
+  .sort((a, b) => a.localeCompare(b))
+  .map((el, i) => `${i + 1}. ${el}`)
+  .join('\n')}`,
+      );
+      return;
     }
 
     // сообщение от управляющего (только своя пиццерия)
@@ -134,34 +162,48 @@ export async function message_kitchen(conversation: Conversation, ctx: Context) 
 
     const messageToStaff = await conversation.waitForReplyTo(queston.message_id, {
       otherwise: async (ctx) =>
-        await ctx.reply('ОШИБКА! напишите текст сообщения команде', {
+        await ctx.reply('ОШИБКА! напишите текст сообщения команде кухни', {
           reply_parameters: { message_id: queston.message_id },
         }),
     });
 
-    let chatId = staffData
-      .filter(
-        (el: StaffData) =>
-          el.idTelegramm && el.staffType !== 'Courier' && el.status === 'Active' && el.unitName === unitName,
-      )
+    chatId = staffData
+      .filter((el: Staff) => el.status !== 'Dismissed' && el.unitName === unitName)
       .map((el) => el.idTelegramm);
+
+    //Рассылка
+    await ctx.reply(`Делаю рассылку, ждите отчета`);
 
     for (const id of chatId) {
       try {
         await ctx.api.sendMessage(id, messageToStaff.msg.text!);
+        const staff = staffData.find((el) => el.idTelegramm == id);
+        message_ok.push(`${staff?.lastName} ${staff?.firstName}`);
       } catch (err) {
-        let staff = staffData.find((el) => el.idTelegramm === id);
-        let fio = `${staff?.firstName} ${staff?.lastName}`;
-        await ctx.reply(`Не удалось отправить сообщение ${fio}`);
-        console.log(err + 'Ошибка в прогорамме отправка сообщений');
+        const staff = staffData.find((el) => el.idTelegramm === id);
+        message_err.push(`${staff?.lastName} ${staff?.firstName}`);
+        console.log(err + 'Ошибка в программе отправка сообщений');
       } finally {
         await sleep(500);
       }
     }
-    await ctx.reply(`Отправлено ${chatId.length} сотрудникам`);
+    await ctx.reply(
+      `Отправлено сообщение сотрудникам 
+${message_ok
+  .sort((a, b) => a.localeCompare(b))
+  .map((el, i) => `${i + 1}. ${el}`)
+  .join('\n')}`,
+    );
+    await ctx.reply(
+      `ОШИБКА в отправке сотрудникам 
+${message_err
+  .sort((a, b) => a.localeCompare(b))
+  .map((el, i) => `${i + 1}. ${el}`)
+  .join('\n')}`,
+    );
     return;
 
-    // Прочеее
+    // Прочее
   } else {
     await ctx.reply('Отправлять сообщения команде может только управляющий или сотрудник HR службы');
     return;

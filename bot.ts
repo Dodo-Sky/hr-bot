@@ -29,8 +29,8 @@ bot.use(
   }),
 );
 
-// установить завершение диалогов чезе 30 минут
-const oneHourInMilliseconds = 30 * 60 * 1000;
+// установить завершение диалогов чезе 10 минут
+const oneHourInMilliseconds = 10 * 60 * 1000;
 // установка диалогов в настройки бота
 // программа discipline
 bot.use(createConversation(disciplineProgramm.responceArr, { maxMillisecondsToWait: oneHourInMilliseconds }));

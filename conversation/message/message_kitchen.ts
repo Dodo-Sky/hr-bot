@@ -24,7 +24,6 @@ where telegram_id = $1
   );
 
   if (!result || result.length === 0) {
-  	await ctx.reply('Отправлять сообщения команде может только управляющий или сотрудник HR службы');
     return;
   }
 

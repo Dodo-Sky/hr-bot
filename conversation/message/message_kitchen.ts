@@ -19,15 +19,17 @@ join public.task_staff t on t.id = tg.task_staff_id
 join units u on u.id = tg.unit_id
 where telegram_id = $1
   `;
-const result = await conversation.external(
-  async () => await postDataServer('posgreSQL', { query, params }),
-);
+  const result = await conversation.external(
+    async () => await postDataServer('posgreSQL', { query, params }),
+  );
 
-if (!result || result.length === 0) {
-  return;
-}
+  if (!result || result.length === 0) {
+  	await ctx.reply('Отправлять сообщения команде может только управляющий или сотрудник HR службы');
+    return;
+  }
 
-const [{ unitName, nameFunction, department_id }] = result;
+  const [{ unitName, nameFunction, department_id }] = result;
+  
   params = [department_id];
   query = `select 
   "firstName",

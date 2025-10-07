@@ -24,6 +24,7 @@ where telegram_id = $1
   );
 
   if (!result || result.length === 0) {
+	  await ctx.reply('Вашего id не в базе данных и у вас нет прав на рассылку сообщений');
     return;
   }
 

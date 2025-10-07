@@ -19,10 +19,15 @@ join public.task_staff t on t.id = tg.task_staff_id
 join units u on u.id = tg.unit_id
 where telegram_id = $1
   `;
-  const [{ unitName, nameFunction, department_id }] = await conversation.external(
-    async () => await postDataServer('posgreSQL', { query, params }),
-  );
+const result = await conversation.external(
+  async () => await postDataServer('posgreSQL', { query, params }),
+);
 
+if (!result || result.length === 0) {
+  return;
+}
+
+const [{ unitName, nameFunction, department_id }] = result;
   params = [department_id];
   query = `select 
   "firstName",

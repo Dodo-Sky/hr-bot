@@ -19,16 +19,17 @@ join public.task_staff t on t.id = tg.task_staff_id
 join units u on u.id = tg.unit_id
 where telegram_id = $1
   `;
-
-  const [{ unitName, nameFunction, department_id }] = await conversation.external(
+  const result = await conversation.external(
     async () => await postDataServer('posgreSQL', { query, params }),
   );
 
-  if (!unitName || !nameFunction || !department_id) {
-    await ctx.reply('Вашего id не в базе данных и у вас нет прав на рассылку сообщений');
+  if (!result || result.length === 0) {
+	  await ctx.reply('Вашего id не в базе данных и у вас нет прав на рассылку сообщений');
     return;
   }
 
+  const [{ unitName, nameFunction, department_id }] = result;
+  
   params = [department_id];
   query = `select 
   "firstName",

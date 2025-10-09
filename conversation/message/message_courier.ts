@@ -5,42 +5,13 @@ import { StaffData, UnitsSettings, Staff } from '../../type/type';
 
 export async function message_courier(conversation: Conversation, ctx: Context) {
   let params = [ctx.chatId];
-  let query = `
-  select 
-u."name" as "unitName",
-t."name" as "nameFunction",
-tg.department_id,
-tg.unit_id as "unitId",
-d.access_token
-from public.telegram_id tg
-join public.task_staff t on t.id = tg.task_staff_id
-join units u on u.id = tg.unit_id
-join public.departments d on u.department_id  = d.id
-where telegram_id = $1
-  `;
   const [{ unitName, nameFunction, department_id, unitId, access_token }] = await conversation.external(
-    async () => await postDataServer('posgreSQL', { query, params }),
+    async () => await postDataServer('message_courier_chatId', { params }),
   );
 
   params = [department_id, unitName];
-  query = `select 
-  s.id,
-  "firstName",
-  "lastName",
-  "unitName",
-  status,
-  "idTelegramm"
-	from public.staff s
-	join public.units u on u.id = s."unitId"
-	join public.departments d on d.id = u.department_id
-	where 1=1 
-		and department_id = $1
-		and "staffType" = 'Courier'
-    and "unitName" = $2
-    and status != 'Dismissed'
-		and "idTelegramm" is not null`;
   const staffData: Staff[] = await conversation.external(
-    async () => await postDataServer('posgreSQL', { query, params }),
+    async () => await postDataServer('message_courier_department_id', { params }),
   );
 
   if (

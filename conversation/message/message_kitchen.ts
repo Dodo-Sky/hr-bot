@@ -8,20 +8,10 @@ function sleep(ms: number) {
 }
 
 export async function message_kitchen(conversation: Conversation, ctx: Context) {
+  
   let params = [ctx.chatId];
-  let query = `
-  select 
-u."name" as "unitName",
-t."name" as "nameFunction",
-tg.department_id
-from public.telegram_id tg
-join public.task_staff t on t.id = tg.task_staff_id
-join units u on u.id = tg.unit_id
-where telegram_id = $1
-  `;
-
   const [{ unitName, nameFunction, department_id }] = await conversation.external(
-    async () => await postDataServer('posgreSQL', { query, params }),
+    async () => await postDataServer('message_kitchen_chatId', { params }),
   );
 
   if (!unitName || !nameFunction || !department_id) {
@@ -30,23 +20,10 @@ where telegram_id = $1
   }
 
   params = [department_id];
-  query = `select 
-  "firstName",
-  "lastName",
-  "unitName",
-  status,
-  s."positionName",
-  "idTelegramm"
-	from public.staff s
-	join public.units u on u.id = s."unitId"
-	join public.departments d on d.id = u.department_id
-	where 1=1 
-		and department_id = $1
-		and "staffType" != 'Courier'`;
-
   const staffData: Staff[] = await conversation.external(
-    async () => await postDataServer('posgreSQL', { query, params }),
+    async () => await postDataServer('message_kitchen_department_id', { params }),
   );
+
   const nameFunction_ok = [
     'HR директор',
     'HR менеджер',
@@ -122,10 +99,8 @@ where telegram_id = $1
     const positionName_arr = Array.from(
       new Set(listNotofication.filter((el) => el.positionName).map((el) => el.positionName)),
     ).sort();
-    console.log(positionName_arr);
     positionName_arr.unshift('Все');
     positionName_arr.push('Отмена');
-    console.log(positionName_arr);
 
     buttonRow = positionName_arr.map((el) => [InlineKeyboard.text(el, el)]);
     keyboard = InlineKeyboard.from(buttonRow);

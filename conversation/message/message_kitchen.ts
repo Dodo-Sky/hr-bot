@@ -10,15 +10,17 @@ function sleep(ms: number) {
 export async function message_kitchen(conversation: Conversation, ctx: Context) {
   
   let params = [ctx.chatId];
-  const [{ unitName, nameFunction, department_id }] = await conversation.external(
+  const result = await conversation.external(
     async () => await postDataServer('message_kitchen_chatId', { params }),
   );
 
-  if (!unitName || !nameFunction || !department_id) {
-    await ctx.reply('Вашего id не в базе данных и у вас нет прав на рассылку сообщений');
+  if (!result || result.length === 0) {
+	  await ctx.reply('Вашего id не в базе данных и у вас нет прав на рассылку сообщений');
     return;
   }
 
+  const [{ unitName, nameFunction, department_id }] = result;
+  
   params = [department_id];
   const staffData: Staff[] = await conversation.external(
     async () => await postDataServer('message_kitchen_department_id', { params }),

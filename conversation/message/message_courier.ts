@@ -5,9 +5,16 @@ import { Staff } from '../../type/type';
 
 export async function message_courier(conversation: Conversation, ctx: Context) {
   let params = [ctx.chatId];
-  const [{ unitName, nameFunction, department_id, unitId, access_token }] = await conversation.external(
+  const result = await conversation.external(
     async () => await postDataServer('message_courier_chatId', { params }),
   );
+  
+  if (!result || result.length === 0) {
+	await ctx.reply('Вашего id не в базе данных и у вас нет прав на рассылку сообщений');
+    return;
+  }
+  
+  const [{ unitName, nameFunction, department_id, unitId, access_token }] = result;
 
   params = [department_id, unitName];
   const staffData: Staff[] = await conversation.external(

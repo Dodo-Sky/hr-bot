@@ -1,7 +1,7 @@
 import { type Context, InlineKeyboard } from 'grammy';
 import { type Conversation } from '@grammyjs/conversations';
-import { getDataFromServer, postDataServer } from '../../services/api';
-import { StaffData, UnitsSettings, Staff } from '../../type/type';
+import {  postDataServer } from '../../services/api';
+import { Staff } from '../../type/type';
 
 export async function message_courier(conversation: Conversation, ctx: Context) {
   let params = [ctx.chatId];
